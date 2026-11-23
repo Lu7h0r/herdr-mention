@@ -1,5 +1,7 @@
 # herdr-mention
 
+![herdr-mention: @-mention any pane or agent while you type](.github/social-preview.png)
+
 Mods for the [Herdr](https://herdr.dev) desktop app.
 
 ## Mention
