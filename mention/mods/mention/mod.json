@@ -1,0 +1,6 @@
+{
+  "place": "none",
+  "title": "Mention",
+  "version": "0.1.0",
+  "overlay": { "kind": "popup", "at": "top", "offset": 64, "width": 560, "height": 330 }
+}

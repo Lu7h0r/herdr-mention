@@ -1,0 +1,4 @@
+{
+  "global": { "ctrl-shift-m": "mod.open:mention" },
+  "terminal": { "ctrl-shift-m": "mod.open:mention" }
+}
