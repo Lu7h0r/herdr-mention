@@ -6,7 +6,19 @@ Mods for the [Herdr](https://herdr.dev) desktop app.
 
 `@` a pane, write what you want it to do, press Enter. `@@` reaches every agent on every space and machine. Free panes get the message now, working panes get it when their turn ends, and a pane that is waiting on you is never typed over.
 
-![Mention](mention/preview.png)
+![Mention: @@ lists every agent on every space and machine](mention/preview.png)
+
+| `@` filters the panes of the space you are in | Free panes are green; click one to mention it |
+| --- | --- |
+| ![Picker](mention/screenshots/picker.png) | ![Footer chips](mention/screenshots/free-chips.png) |
+
+### How to use it
+
+1. Press `ctrl-shift-m`.
+2. Type `@` and part of a pane's name, or `@@` to search every space and machine. Enter picks it; a click on a chip at the bottom does the same.
+3. Write the message and press Enter.
+
+Green means the pane is free and gets it now. Yellow means it is working: the message waits for its turn to end. Red means it is waiting on you, so nothing is sent.
 
 Tell your agent:
 
