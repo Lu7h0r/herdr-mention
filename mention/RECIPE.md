@@ -22,7 +22,7 @@ This file is the brief: enough to build Mention from an empty folder. The files 
 - Typing `@` followed by text filters the agents of the shown space by pane name or terminal address, free ones first. Typing `@@` filters every agent on every space and machine, matching the space name too. Up/Down or Tab/Shift-Tab move the selection; Enter or a click replaces the `@text` with a chip for that pane. Each pane can be mentioned once.
 - A click on a footer chip mentions that pane at the cursor, as if it had been picked from the list, and keeps the keyboard in the input.
 - The pane you were in when the popup opened is never offered: you don't mention yourself.
-- Enter with no picker open and only chips (no message) drops the mentions into the prompt of the pane you were in, as `@name (herdr t107) `, without pressing Enter. You keep writing your message to your own agent; the address lets it reach the other pane (`hc send t107 ...`). This is the main use.
+- Enter with no picker open and only chips (no message) drops the mentions into the prompt of the pane you were in, as `@name (reach it: hc send t107 "...") `, without pressing Enter. You keep writing your message to your own agent; the address lets it reach the other pane (`hc send t107 ...`). This is the main use.
 - Enter with chips and a message sends the message to the mentioned panes instead. The message is the input's text with the chips removed and whitespace collapsed. With no chip the footer says "Type @ to pick a pane" and nothing closes.
 - Delivery, per mentioned pane, checked against the agent's live status at that moment:
   - `idle` or `done`: `hc send <address> <text>` right away. A success notification "Sent to <name>" shows the first 120 characters; a failure shows "<name>: not sent" with the command's output.
@@ -68,7 +68,7 @@ This file is the brief: enough to build Mention from an empty folder. The files 
 
 - `herdr-app check mods/mention` passes with the matching Herdr binary and home.
 - The key opens the popup with the input focused; Esc closes it; the key again closes it.
-- The pane you were in is not in the list. Picking a pane and pressing Enter with no message leaves `@name (herdr tN) ` in that pane's prompt, nothing submitted, and the clipboard's previous text is back.
+- The pane you were in is not in the list. Picking a pane and pressing Enter with no message leaves `@name (reach it: hc send tN "...") ` in that pane's prompt, nothing submitted, and the clipboard's previous text is back.
 - `@` lists only the shown space's agents; `@@` lists every space and machine, with the space icon and name on each row.
 - Enter on a row, or a click on a footer chip, inserts a chip; the chip's text is not part of the sent message.
 - A free pane receives the exact text and a "Sent to" notification appears; a working pane shows "Queued for" and receives the text after its turn; a blocked pane shows the warning and receives nothing.

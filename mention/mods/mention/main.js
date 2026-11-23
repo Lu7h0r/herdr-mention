@@ -168,7 +168,7 @@ export default class Mention extends View {
   drop(chosen, cx) {
     if (!this.home) { this.hint = "No terminal was focused; write a message to send it"; cx.notify(); return; }
     this.busy = true;
-    const refs = chosen.map((a) => `@${paneName(a)} (herdr ${a.address})`).join(" ") + " ";
+    const refs = chosen.map((a) => `@${paneName(a)} (reach it: hc send ${a.address} "...")`).join(" ") + " ";
     cx.spawn(async () => {
       // terminal.paste reads the clipboard. clip.js holds the mentions there for a moment and then
       // restores whatever was copied before, images and files included.

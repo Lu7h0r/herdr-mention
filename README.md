@@ -4,7 +4,7 @@ Mods for the [Herdr](https://herdr.dev) desktop app.
 
 ## Mention
 
-Mention another pane while you talk to your agent. `@` lists the panes of your space, `@@` every agent on every machine. Enter drops `@name (herdr t107)` into the prompt you were writing, so your agent knows who to coordinate with. Write a message after the mention and it goes straight to that pane instead: free panes get it now, working panes when their turn ends, and a pane waiting on you is never typed over.
+Mention another pane while you talk to your agent. `@` lists the panes of your space, `@@` every agent on every machine. Enter drops `@name (reach it: hc send t107 "...")` into the prompt you were writing, so your agent knows who to coordinate with. Write a message after the mention and it goes straight to that pane instead: free panes get it now, working panes when their turn ends, and a pane waiting on you is never typed over.
 
 ![Mention: @@ lists every agent on every space and machine](mention/preview.png)
 
