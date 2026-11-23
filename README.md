@@ -25,7 +25,7 @@ Green means the pane is free and gets it now. Yellow means it is working: the me
 Tell your agent:
 
 ```
-Read ~/.config/herdr-app/AGENTS.md, then add this mod: herdr.dev/mods/Lu7h0r/herdr-mention
+Read ~/.config/herdr-app/AGENTS.md, then add this mod: herdr.dev/mods/Lu7h0r/herdr-mention--mention
 ```
 
 Or install it by hand:
