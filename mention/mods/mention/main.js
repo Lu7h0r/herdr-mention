@@ -3,7 +3,7 @@
 // is never typed over. Panes of other spaces are not offered.
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex, InputState, Input } from "gpui-base";
-import { agents, closeOverlay, exec, focused, hc, notify, props, shared, spaces, theme } from "herdr";
+import { agents, closeOverlay, exec, focused, hc, notify, props, run, shared, spaces, theme } from "herdr";
 
 const WORD = { blocked: "needs you", done: "free", working: "working", idle: "free" };
 const ORDER = { idle: 0, done: 1, working: 2, blocked: 3 };
@@ -67,6 +67,7 @@ function programIcon(a, size, t) {
 export default class Mention extends View {
   init(_props, cx) {
     this.space = focused()?.space ?? spaces().find((s) => s.active)?.id ?? null;
+    this.home = focused()?.terminal ?? null;   // the pane you were typing in: mentions land in its prompt
     this.spaceName = spaces().find((s) => s.id === this.space)?.name ?? "";
     this.targets = new Map();   // address -> agent, one per chip in the input
     this.sel = 0;
@@ -103,7 +104,7 @@ export default class Mention extends View {
   matches() {
     if (this.query === null) return [];
     const q = this.query;
-    return candidates(this.wide ? null : this.space).filter((a) => !this.targets.has(a.address))
+    return candidates(this.wide ? null : this.space).filter((a) => a.address !== this.home && !this.targets.has(a.address))
       .filter((a) => !q || paneName(a).toLowerCase().includes(q) || a.space_name.toLowerCase().includes(q) || a.address.toLowerCase().startsWith(q))
       .slice(0, MAX_ROWS);
   }
@@ -152,7 +153,7 @@ export default class Mention extends View {
     if (this.busy) return;
     const { text, chosen } = this.compose();
     if (!chosen.length) { this.hint = "Type @ to pick a pane"; cx.notify(); return; }
-    if (!text) { this.hint = "Nothing to send"; cx.notify(); return; }
+    if (!text) return this.drop(chosen, cx);
     this.busy = true;
     this.hint = `Sending to ${chosen.map(paneName).join(", ")}`;
     cx.notify();
@@ -160,6 +161,24 @@ export default class Mention extends View {
     cx.spawn(async () => {
       await Promise.all(chosen.map((a) => deliver(a, text)));
       this.dismiss();
+    });
+  }
+
+  /** No message: leave the mentions in the prompt of the pane you were in, without pressing Enter. */
+  drop(chosen, cx) {
+    if (!this.home) { this.hint = "No terminal was focused; write a message to send it"; cx.notify(); return; }
+    this.busy = true;
+    const refs = chosen.map((a) => `@${paneName(a)} (herdr ${a.address})`).join(" ") + " ";
+    cx.spawn(async () => {
+      // terminal.paste reads the clipboard: put the mentions there, paste, then give the old text back.
+      const saved = await exec("/bin/sh", ["-c", "pbpaste"]);
+      await exec("/bin/sh", ["-c", 'printf %s "$1" | pbcopy', "mention", refs]);
+      if (saved.code === 0 && saved.stdout) {
+        await exec("/bin/sh", ["-c", 'nohup /bin/sh -c \'sleep 1; printf %s "$0" | pbcopy\' "$1" >/dev/null 2>&1 &', "mention", saved.stdout]);
+      }
+      this.dismiss();
+      run("pane.focus", { terminal: this.home });
+      run("terminal.paste", {});
     });
   }
 
@@ -181,7 +200,7 @@ export default class Mention extends View {
     const t = theme();
     const rows = this.matches();
     if (this.sel >= rows.length) this.sel = Math.max(0, rows.length - 1);
-    const all = candidates(this.space);
+    const all = candidates(this.space).filter((a) => a.address !== this.home);
     const chip = (ctx) => {
       const a = this.targets.get(ctx.token.id);
       return h_flex().h(ctx.line_height - 4).px(6).gap(5).items_center().rounded(6)
@@ -198,7 +217,7 @@ export default class Mention extends View {
           .child(div().text_color(t.dim).child("·"))
           .child(spaceIcon(this.space, this.spaceName, 16, t))
           .child(div().text_color(t.muted).child(this.spaceName)))
-        .child(div().text_color(t.muted).child("@ here · @@ everywhere · Enter send · Esc")))
+        .child(div().text_color(t.muted).child("@ here · @@ everywhere · Enter alone: into your prompt · with text: send")))
       .child(Input.new(this.input).token(chip).h(38).px(10).rounded(9).border_1()
         .border_color(t.accent).bg(t.background).text_size(12.8).text_color(t.foreground))
       .when(this.query !== null, (el) => el.child(v_flex().gap(2)
