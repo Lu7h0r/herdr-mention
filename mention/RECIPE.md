@@ -33,7 +33,7 @@ This file is the brief: enough to build Mention from an empty folder. The files 
 
 ## Built from
 
-- **One mod**, `mods/mention/`, with `main.js`, `mod.json` and `at-sign.svg` (Lucide's `at-sign`, ISC, license next to it). The manifest has `place: "none"` and a top popup overlay, so there is no `layouts/` folder or layout change.
+- **One mod**, `mods/mention/`, with `main.js`, `clip.js`, `mod.json` and `at-sign.svg` (Lucide's `at-sign`, ISC, license next to it). The manifest has `place: "none"` and a top popup overlay, so there is no `layouts/` folder or layout change.
 - **A `keys.json` snippet** with two bindings, merged into the person's existing keys rather than replacing them:
 
   ```json
@@ -46,14 +46,14 @@ This file is the brief: enough to build Mention from an empty folder. The files 
   The global binding opens the popup outside a terminal; the terminal binding opens it while a terminal has focus.
 - **A focusable view** with one retained `InputState` from `gpui-base`, created in `init`. The `change` event re-scans the text before the cursor for `/(@@?)([^\s@]*)$/`; the `submit` event picks the selected row when a picker is open and sends otherwise. Mentions are `InlineToken`s: `replace_range_with_token(range, { id: address, text, label })`, drawn through `Input.new(state).token(render)`. `content().tokens` gives the chips back at send time; their ranges are cut out of `content().text`.
 - **Data:** `agents()` for the candidates and their live status (filtered by `a.space === focused().space`, or unfiltered for `@@`), `spaces()` for the shown space's name, `shared("kolczyk.spaces")` and `shared("space.colors")` for the space icon, `theme()` for colors. `a.program.icon` with `svg()` when `tint`, else `image()`.
-- **Into your prompt:** `focused().terminal` is read in `init` (that pane is the home). The mentions go to the clipboard (`pbpaste` saves the old text, `printf %s "$1" | pbcopy`), the popup closes, `run("pane.focus", {terminal: home})` and `run("terminal.paste", {})` paste them without Enter, and a detached `sleep 1; pbcopy` puts the old text back.
+- **Into your prompt:** `focused().terminal` is read in `init` (that pane is the home). A detached `osascript -l JavaScript clip.js <mentions> 1.2` snapshots the whole clipboard, sets the mentions as plain text and holds them for 1.2 s; the mod waits 0.35 s, closes, runs `pane.focus {terminal: home}` and `terminal.paste`, and `clip.js` then restores every item it saved (eagerly, with a short delay before it exits, or the pasteboard loses lazily provided data).
 - **Delivery:** `hc(["send", address, text])` for a free pane. For a working pane, `exec("/bin/sh", ["-c", "nohup /bin/sh -c 'hc wait \"$0\" ...; hc send \"$0\" \"$1\" ...' \"$1\" \"$2\" &", "mention", address, text])`, because a mod's `hc()`/`exec()` call is capped at 30 seconds and a turn can take longer. The address and text are passed as positional arguments, never spliced into the shell string. Remote addresses (`machine/t7`) work as `hc` accepts them.
 - **Why delivery runs before closing:** a closed mod copy cancels its pending calls, so `send()` awaits every delivery inside `cx.spawn` and only then calls `closeOverlay(props().overlay)`.
 - **Customization points** at the top of `main.js`: `MAX_ROWS` (rows in the picker), `WORD` (status words), `MARK` (fallback space colors), the green used for free panes in `statusColor`.
 
 ## Watch out
 
-- Dropping into the prompt goes through the clipboard. Text on the clipboard is restored a second later; an image or files on the clipboard are not. `pbcopy`/`pbpaste` make this macOS-only; on Linux use `wl-copy`/`xclip`.
+- Dropping into the prompt goes through the clipboard for about a second. `clip.js` (JXA) snapshots every item and type first, images and file URLs included, and writes them all back afterwards, so a copied photo survives. This is macOS-only; on Linux use `wl-copy`/`xclip` with the same save, set, restore order. `hc keys` cannot type `@` or parentheses, which is why the clipboard is needed.
 
 - The mod types into other agents' terminals through `hc send`. Disclose that. It never uses `--force`: a blocked agent (a permission dialog, a question) is not answered for the person.
 - A queued message is a detached process. Closing Herdr does not cancel it; it fires when the pane's turn ends. If the pane is closed first, `hc wait` ends and `hc send` fails silently.

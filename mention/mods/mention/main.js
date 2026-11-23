@@ -3,7 +3,7 @@
 // is never typed over. Panes of other spaces are not offered.
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex, InputState, Input } from "gpui-base";
-import { agents, closeOverlay, exec, focused, hc, notify, props, run, shared, spaces, theme } from "herdr";
+import { agents, appHome, closeOverlay, exec, focused, hc, notify, props, run, shared, spaces, theme } from "herdr";
 
 const WORD = { blocked: "needs you", done: "free", working: "working", idle: "free" };
 const ORDER = { idle: 0, done: 1, working: 2, blocked: 3 };
@@ -170,12 +170,11 @@ export default class Mention extends View {
     this.busy = true;
     const refs = chosen.map((a) => `@${paneName(a)} (herdr ${a.address})`).join(" ") + " ";
     cx.spawn(async () => {
-      // terminal.paste reads the clipboard: put the mentions there, paste, then give the old text back.
-      const saved = await exec("/bin/sh", ["-c", "pbpaste"]);
-      await exec("/bin/sh", ["-c", 'printf %s "$1" | pbcopy', "mention", refs]);
-      if (saved.code === 0 && saved.stdout) {
-        await exec("/bin/sh", ["-c", 'nohup /bin/sh -c \'sleep 1; printf %s "$0" | pbcopy\' "$1" >/dev/null 2>&1 &', "mention", saved.stdout]);
-      }
+      // terminal.paste reads the clipboard. clip.js holds the mentions there for a moment and then
+      // restores whatever was copied before, images and files included.
+      const clip = `${appHome()}/mods/mention/clip.js`;
+      await exec("/bin/sh", ["-c", 'nohup osascript -l JavaScript "$0" "$1" 1.2 >/dev/null 2>&1 &', clip, refs]);
+      await exec("/bin/sleep", ["0.35"]);
       this.dismiss();
       run("pane.focus", { terminal: this.home });
       run("terminal.paste", {});
